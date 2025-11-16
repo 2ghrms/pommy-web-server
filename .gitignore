@@ -1,16 +1,39 @@
-# Compiled class file
+###############################################
+# 기본 Java 컴파일 파일
+###############################################
 *.class
 
-# Log file
+###############################################
+# 로그 파일
+###############################################
 *.log
+hs_err_pid*
+replay_pid*
 
-# BlueJ files
-*.ctxt
+###############################################
+# Eclipse 관련 파일
+###############################################
+.settings/
+.project
+.classpath
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Eclipse WTP (Dynamic Web Project)
+org.eclipse.wst.common.component
+org.eclipse.wst.common.project.facet.core.xml
+org.eclipse.jst.j2ee.web.container
+org.eclipse.jst.j2ee.ejb.container
 
-# Package Files #
+###############################################
+# Build / Output 디렉토리
+###############################################
+/build/
+/target/
+/bin/
+/out/
+
+###############################################
+# 패키징 파일 / 압축 파일
+###############################################
 *.jar
 *.war
 *.nar
@@ -19,6 +42,60 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+###############################################
+# Mobile Tools for Java (J2ME)
+###############################################
+.mtj.tmp/
+
+###############################################
+# Maven / Gradle
+###############################################
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+.gradle/
+build/
+
+###############################################
+# Web 관련 (JSP 프로젝트)
+###############################################
+# JSP 컴파일 결과물 등 (중복 정리됨)
+*.war
+*.ear
+
+###############################################
+# 운영체제 임시 파일
+###############################################
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+###############################################
+# IDE & Editor 설정 파일
+###############################################
+# VSCode
+.vscode/
+
+# IntelliJ IDEA
+*.iml
+.idea/
+
+###############################################
+# 환경 설정 파일 
+###############################################
+*.env
+*.properties
+*.yml
+*.yaml
+
+###############################################
+# 기타
+###############################################
+# BlueJ files
+*.ctxt
