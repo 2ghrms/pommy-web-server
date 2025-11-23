@@ -3,6 +3,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pommy - 프롬프트 밈 공유</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/logo-favicon.png">
+    <link rel="shortcut icon" type="image/png" href="${pageContext.request.contextPath}/images/logo-favicon.png">
+    <link rel="apple-touch-icon" href="${pageContext.request.contextPath}/images/logo-favicon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
