@@ -1,6 +1,7 @@
 package com.pommy.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,6 +15,7 @@ import com.pommy.service.UserService;
 import com.pommy.service.UserServiceImpl;
 import com.pommy.service.PromptMemeService;
 import com.pommy.service.PromptMemeServiceImpl;
+import com.pommy.util.PasswordUtil;
 
 /**
  * 마이페이지 관련 요청을 처리하는 컨트롤러
@@ -35,6 +37,29 @@ public class MypageController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String path = request.getPathInfo();
+        if (path == null || "/".equals(path)) {
+            renderMypage(request, response);
+        } else if ("/edit".equals(path)) {
+            renderEditForm(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String path = request.getPathInfo();
+        if ("/edit".equals(path)) {
+            handleProfileUpdate(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        }
+    }
+
+    private void renderMypage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("userId") == null) {
@@ -45,17 +70,15 @@ public class MypageController extends HttpServlet {
             Long userId = (Long) session.getAttribute("userId");
             String nickname = (String) session.getAttribute("nickname");
 
-            // 사용자 정보 조회
             User user = userService.getUserById(userId);
             if (user == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "사용자를 찾을 수 없습니다.");
                 return;
             }
 
-            // 사용자가 작성한 프롬프트 밈 조회
             List<PromptMeme> myPromptMemes = promptMemeService.getPromptMemesByUserId(userId);
             if (myPromptMemes == null) {
-                myPromptMemes = new java.util.ArrayList<>();
+                myPromptMemes = new ArrayList<>();
             }
 
             request.setAttribute("user", user);
@@ -66,8 +89,97 @@ public class MypageController extends HttpServlet {
                     .forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "서버 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    private void renderEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("userId") == null) {
+                response.sendRedirect(request.getContextPath() + "/auth/login");
+                return;
+            }
+
+            Long userId = (Long) session.getAttribute("userId");
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "사용자를 찾을 수 없습니다.");
+                return;
+            }
+
+            request.setAttribute("user", user);
+            request.getRequestDispatcher("/WEB-INF/jsp/user/edit.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "서버 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    private void handleProfileUpdate(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/auth/login");
+            return;
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        try {
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "사용자를 찾을 수 없습니다.");
+                return;
+            }
+
+            String nickname = request.getParameter("nickname");
+            String password = request.getParameter("password");
+            String confirmPassword = request.getParameter("confirmPassword");
+
+            List<String> errors = new ArrayList<>();
+
+            if (nickname == null || nickname.trim().isEmpty()) {
+                errors.add("닉네임을 입력해주세요.");
+            } else if (nickname.trim().length() < 2 || nickname.trim().length() > 20) {
+                errors.add("닉네임은 2-20자여야 합니다.");
+            }
+
+            boolean passwordProvided = password != null && !password.trim().isEmpty();
+            if (passwordProvided) {
+                if (password.trim().length() < 8 || !password.trim().matches("^(?=.*[a-zA-Z])(?=.*[0-9]).+$")) {
+                    errors.add("비밀번호는 최소 8자이며 영문과 숫자를 포함해야 합니다.");
+                }
+                if (confirmPassword == null || !password.trim().equals(confirmPassword.trim())) {
+                    errors.add("비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+                }
+            }
+
+            if (!errors.isEmpty()) {
+                request.setAttribute("errors", errors);
+                request.setAttribute("user", user);
+                request.setAttribute("formNickname", nickname);
+                request.getRequestDispatcher("/WEB-INF/jsp/user/edit.jsp").forward(request, response);
+                return;
+            }
+
+            user.setNickname(nickname.trim());
+            if (passwordProvided) {
+                user.setPassword(PasswordUtil.hashPassword(password.trim()));
+            }
+
+            userService.updateUser(user);
+            session.setAttribute("nickname", user.getNickname());
+
+            request.setAttribute("user", user);
+            request.setAttribute("successMessage", "회원 정보가 수정되었습니다.");
+            request.getRequestDispatcher("/WEB-INF/jsp/user/edit.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "서버 오류가 발생했습니다: " + e.getMessage());
         }
     }
 }
-
