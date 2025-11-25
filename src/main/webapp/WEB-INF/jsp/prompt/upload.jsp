@@ -35,10 +35,35 @@
                 </div>
                 
                 <div>
-                    <label for="upload-image" class="block text-sm font-medium text-gray-700">미리보기 사진</label>
-                    <input type="file" id="upload-image" name="image" accept="image/*" 
-                           class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-main file:text-gray-800 hover:file:bg-opacity-90">
-                    <p class="text-xs text-gray-400 mt-1">* JPG, PNG, GIF, WEBP 형식만 지원됩니다. (최대 10MB)</p>
+                    <label for="upload-image" class="block text-sm font-medium text-gray-700 mb-2">미리보기 사진</label>
+                    <div class="space-y-3">
+                        <div id="image-preview-container" class="relative">
+                            <div id="no-image-placeholder" class="w-full h-64 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                                <div class="text-center text-gray-400">
+                                    <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <p class="text-sm">이미지를 선택해주세요</p>
+                                </div>
+                            </div>
+                            <div id="new-image-preview" class="hidden mt-3 relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                <img id="preview-img" src="" alt="이미지 미리보기" class="w-full h-full object-cover">
+                                <button type="button" onclick="clearImagePreview()" 
+                                        class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">
+                                    ✕
+                                </button>
+                                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-sm py-1 px-2 text-center">
+                                    선택한 이미지
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="file" id="upload-image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                                   onchange="previewImage(this)"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-main file:text-gray-800 hover:file:bg-opacity-90">
+                            <p class="text-xs text-gray-400 mt-1">* JPG, PNG, GIF, WEBP 형식만 지원됩니다. (최대 10MB)</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -79,5 +104,41 @@
         </div>
     </div>
     <%@ include file="../../jspf/footer.jspf" %>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewContainer = document.getElementById('new-image-preview');
+                    const previewImg = document.getElementById('preview-img');
+                    const noImagePlaceholder = document.getElementById('no-image-placeholder');
+                    
+                    previewImg.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    
+                    // 플레이스홀더 숨기기
+                    if (noImagePlaceholder) {
+                        noImagePlaceholder.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearImagePreview() {
+            const previewContainer = document.getElementById('new-image-preview');
+            const fileInput = document.getElementById('upload-image');
+            const noImagePlaceholder = document.getElementById('no-image-placeholder');
+            
+            previewContainer.classList.add('hidden');
+            fileInput.value = '';
+            
+            // 플레이스홀더 다시 표시
+            if (noImagePlaceholder) {
+                noImagePlaceholder.style.display = 'flex';
+            }
+        }
+    </script>
 </body>
 </html>

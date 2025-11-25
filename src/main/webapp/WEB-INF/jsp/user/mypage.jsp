@@ -31,14 +31,20 @@
             &larr; 메인으로
         </button>
 
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <h1 class="text-3xl font-bold text-gray-800">
                 <span class="text-point"><%= myNickname %></span>님의 페이지
             </h1>
-            <button onclick="location.href='${pageContext.request.contextPath}/auth/logout'"
-                    class="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow hover:bg-gray-400 transition-colors">
-                로그아웃
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="location.href='${pageContext.request.contextPath}/mypage/edit'"
+                        class="bg-white text-gray-800 font-semibold py-2 px-4 rounded-lg shadow hover:bg-gray-100 transition-colors">
+                    프로필 수정
+                </button>
+                <button onclick="location.href='${pageContext.request.contextPath}/auth/logout'"
+                        class="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow hover:bg-gray-400 transition-colors">
+                    로그아웃
+                </button>
+            </div>
         </div>
 
         <section>
@@ -72,13 +78,21 @@
                                 <p class="text-sm text-gray-500 mt-2 truncate">
                                     <%= (desc != null && !desc.isEmpty()) ? desc : "설명이 없습니다." %>
                                 </p>
-                                <form method="post" action="${pageContext.request.contextPath}/prompt/delete" style="display: inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                                    <input type="hidden" name="id" value="<%= id %>">
-                                    <button type="submit" onclick="event.stopPropagation();" 
-                                            class="mt-3 w-full bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors">
-                                        삭제
+                                <div class="mt-3 flex gap-2">
+                                    <button type="button"
+                                            onclick="event.stopPropagation(); location.href='${pageContext.request.contextPath}/prompt/edit?id=<%= id %>';"
+                                            class="w-1/2 bg-white border border-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">
+                                        수정
                                     </button>
-                                </form>
+                                    <form method="post" action="${pageContext.request.contextPath}/prompt/delete" class="w-1/2"
+                                          onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                        <input type="hidden" name="id" value="<%= id %>">
+                                        <button type="submit" onclick="event.stopPropagation();"
+                                                class="w-full bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors">
+                                            삭제
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     <% } %>
