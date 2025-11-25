@@ -1,5 +1,6 @@
 package com.pommy.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,12 +8,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import com.pommy.model.AIType;
 import com.pommy.model.PromptMeme;
 import com.pommy.model.User;
@@ -26,6 +30,10 @@ import com.pommy.service.UserServiceImpl;
  * 메인 페이지, 상세 페이지, 검색 페이지, 삭제, 업데이트 처리
  */
 @WebServlet("/prompt/*")
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, // 10MB
+        maxRequestSize = 10 * 1024 * 1024, // 10MB
+        fileSizeThreshold = 1024 * 1024 // 1MB
+)
 public class PromptMemeController extends HttpServlet {
 
     private PromptMemeService promptMemeService;
@@ -185,6 +193,8 @@ public class PromptMemeController extends HttpServlet {
 
             request.getRequestDispatcher("/WEB-INF/jsp/prompt/search.jsp")
                     .forward(request, response);
+        } else if (path.equals("/edit")) {
+            renderEditForm(request, response);
         }
     }
 
@@ -228,57 +238,180 @@ public class PromptMemeController extends HttpServlet {
                 }
             }
         } else if (path != null && path.equals("/update")) {
-            // 업데이트 처리
-            String idStr = request.getParameter("id");
-            if (idStr != null) {
-                try {
-                    Long id = Long.parseLong(idStr);
-                    PromptMeme promptMeme = promptMemeService.getPromptMemeById(id);
+            handleUpdate(request, response, userId);
+        }
+    }
 
-                    if (promptMeme == null) {
-                        response.sendError(HttpServletResponse.SC_NOT_FOUND, "프롬프트 밈을 찾을 수 없습니다.");
-                        return;
-                    }
+    private void renderEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/auth/login");
+            return;
+        }
 
-                    // 본인 글만 수정 가능
-                    if (!promptMeme.getUserId().equals(userId)) {
-                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "수정 권한이 없습니다.");
-                        return;
-                    }
+        String idStr = request.getParameter("id");
+        if (idStr == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID가 필요합니다.");
+            return;
+        }
 
-                    // 업데이트할 데이터 받기
-                    String title = request.getParameter("title");
-                    String description = request.getParameter("description");
-                    String promptContent = request.getParameter("prompt");
-                    String snsUrl = request.getParameter("snsUrl");
-                    String aiType = request.getParameter("ai"); // 단일 AI 타입만 받기
+        try {
+            Long id = Long.parseLong(idStr);
+            PromptMeme promptMeme = promptMemeService.getPromptMemeById(id);
+            if (promptMeme == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "프롬프트 밈을 찾을 수 없습니다.");
+                return;
+            }
 
-                    if (title != null && !title.trim().isEmpty()) {
-                        promptMeme.setTitle(title.trim());
-                    }
-                    if (description != null) {
-                        promptMeme.setDescription(description.trim().isEmpty() ? null : description.trim());
-                    }
-                    if (promptContent != null && !promptContent.trim().isEmpty()) {
-                        promptMeme.setPromptContent(promptContent.trim());
-                    }
-                    if (snsUrl != null) {
-                        promptMeme.setSnsUrl(snsUrl.trim().isEmpty() ? null : snsUrl.trim());
-                    }
-                    // AI 타입 단일 선택 처리
-                    if (aiType != null && !aiType.trim().isEmpty()) {
-                        AIType selectedAiType = AIType.fromValue(aiType.trim());
-                        if (selectedAiType != null) {
-                            promptMeme.setAiTypeEnum(selectedAiType); // 단일 AI 타입만 설정
-                        }
-                    }
+            Long sessionUserId = (Long) session.getAttribute("userId");
+            if (!promptMeme.getUserId().equals(sessionUserId)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "수정 권한이 없습니다.");
+                return;
+            }
 
-                    promptMemeService.updatePromptMeme(promptMeme);
-                    response.sendRedirect(request.getContextPath() + "/prompt/detail?id=" + id);
-                } catch (NumberFormatException e) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 ID 형식입니다.");
+            request.setAttribute("promptMeme", promptMeme);
+            request.setAttribute("aiTypes", AIType.values());
+            request.getRequestDispatcher("/WEB-INF/jsp/prompt/edit.jsp").forward(request, response);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 ID 형식입니다.");
+        }
+    }
+
+    private void handleUpdate(HttpServletRequest request, HttpServletResponse response, Long userId)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID가 필요합니다.");
+            return;
+        }
+
+        try {
+            Long id = Long.parseLong(idStr);
+            PromptMeme promptMeme = promptMemeService.getPromptMemeById(id);
+
+            if (promptMeme == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "프롬프트 밈을 찾을 수 없습니다.");
+                return;
+            }
+
+            if (!promptMeme.getUserId().equals(userId)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "수정 권한이 없습니다.");
+                return;
+            }
+
+            String title = request.getParameter("title");
+            String description = request.getParameter("description");
+            String promptContent = request.getParameter("prompt");
+            String snsUrl = request.getParameter("snsUrl");
+            String aiType = request.getParameter("ai");
+
+            List<String> errors = new ArrayList<>();
+
+            if (title == null || title.trim().isEmpty()) {
+                errors.add("제목을 입력해주세요.");
+            }
+            if (promptContent == null || promptContent.trim().isEmpty()) {
+                errors.add("프롬프트 내용을 입력해주세요.");
+            }
+            if (aiType == null || aiType.trim().isEmpty()) {
+                errors.add("AI 종류를 선택해주세요.");
+            }
+
+            AIType selectedAiType = null;
+            if (aiType != null && !aiType.trim().isEmpty()) {
+                selectedAiType = AIType.fromValue(aiType.trim());
+                if (selectedAiType == null) {
+                    errors.add("올바르지 않은 AI 타입입니다.");
                 }
             }
+
+            if (!errors.isEmpty()) {
+                promptMeme.setTitle(title);
+                promptMeme.setDescription(description);
+                promptMeme.setPromptContent(promptContent);
+                promptMeme.setSnsUrl(snsUrl);
+                promptMeme.setAiType(aiType);
+
+                request.setAttribute("errors", errors);
+                request.setAttribute("promptMeme", promptMeme);
+                request.setAttribute("aiTypes", AIType.values());
+                request.getRequestDispatcher("/WEB-INF/jsp/prompt/edit.jsp").forward(request, response);
+                return;
+            }
+
+            promptMeme.setTitle(title.trim());
+            promptMeme.setDescription(description != null && !description.trim().isEmpty() ? description.trim() : null);
+            promptMeme.setPromptContent(promptContent.trim());
+            promptMeme.setSnsUrl(snsUrl != null && !snsUrl.trim().isEmpty() ? snsUrl.trim() : null);
+
+            if (selectedAiType != null) {
+                promptMeme.setAiTypeEnum(selectedAiType);
+            }
+
+            // 이미지 파일 업로드 처리
+            Part filePart = request.getPart("image");
+            if (filePart != null && filePart.getSize() > 0) {
+                String fileName = filePart.getSubmittedFileName();
+                if (fileName != null && !fileName.isEmpty()) {
+                    // 파일 확장자 검증
+                    String extension = "";
+                    int lastDot = fileName.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        extension = fileName.substring(lastDot + 1).toLowerCase();
+                    }
+
+                    // 이미지 파일만 허용
+                    if (extension.matches("jpg|jpeg|png|gif|webp")) {
+                        // 기존 이미지 파일 삭제 (있는 경우)
+                        String oldImageUrl = promptMeme.getImageUrl();
+                        if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+                            try {
+                                String oldFileName = oldImageUrl.substring(oldImageUrl.lastIndexOf('/') + 1);
+                                String uploadDir = getServletContext().getRealPath("/uploads");
+                                File oldFile = new File(uploadDir, oldFileName);
+                                if (oldFile.exists()) {
+                                    oldFile.delete();
+                                }
+                            } catch (Exception e) {
+                                // 기존 파일 삭제 실패는 무시 (로그만 남김)
+                                e.printStackTrace();
+                            }
+                        }
+
+                        // 업로드 디렉토리 설정
+                        String uploadDir = getServletContext().getRealPath("/uploads");
+                        File uploadDirFile = new File(uploadDir);
+                        if (!uploadDirFile.exists()) {
+                            uploadDirFile.mkdirs();
+                        }
+
+                        // 고유한 파일명 생성
+                        String uniqueFileName = UUID.randomUUID().toString() + "." + extension;
+                        String filePath = uploadDir + File.separator + uniqueFileName;
+
+                        // 파일 저장
+                        filePart.write(filePath);
+                        promptMeme.setImageUrl(request.getContextPath() + "/uploads/" + uniqueFileName);
+                    } else {
+                        errors.add("이미지 파일은 JPG, PNG, GIF, WEBP 형식만 지원됩니다.");
+                    }
+                }
+            }
+
+            // 이미지 파일 검증 오류가 있으면 다시 폼으로
+            if (!errors.isEmpty()) {
+                request.setAttribute("errors", errors);
+                request.setAttribute("promptMeme", promptMeme);
+                request.setAttribute("aiTypes", AIType.values());
+                request.getRequestDispatcher("/WEB-INF/jsp/prompt/edit.jsp").forward(request, response);
+                return;
+            }
+
+            promptMemeService.updatePromptMeme(promptMeme);
+            response.sendRedirect(request.getContextPath() + "/prompt/detail?id=" + id);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 ID 형식입니다.");
         }
     }
 }
