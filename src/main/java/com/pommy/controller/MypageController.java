@@ -36,7 +36,6 @@ public class MypageController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String path = request.getPathInfo();
         if (path == null || "/".equals(path)) {
             renderMypage(request, response);
@@ -58,6 +57,9 @@ public class MypageController extends HttpServlet {
         }
     }
 
+    /**
+     * 마이페이지 렌더링
+     */
     private void renderMypage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -94,6 +96,9 @@ public class MypageController extends HttpServlet {
         }
     }
 
+    /**
+     * 프로필 수정 폼 렌더링
+     */
     private void renderEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -119,6 +124,9 @@ public class MypageController extends HttpServlet {
         }
     }
 
+    /**
+     * 프로필 업데이트 처리
+     */
     private void handleProfileUpdate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
