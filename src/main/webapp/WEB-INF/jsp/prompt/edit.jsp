@@ -73,7 +73,7 @@
                             <% } %>
                             <div id="new-image-preview" class="hidden mt-3 relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                                 <img id="preview-img" src="" alt="새 이미지 미리보기" class="w-full h-full object-cover">
-                                <button type="button" onclick="clearImagePreview()" 
+                                <button type="button" onclick="handleClearImagePreview()" 
                                         class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">
                                     ✕
                                 </button>
@@ -84,7 +84,7 @@
                         </div>
                         <div>
                             <input type="file" id="image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
-                                   onchange="previewImage(this)"
+                                   onchange="handleImagePreview(this)"
                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-main file:text-gray-800 hover:file:bg-opacity-90">
                             <p class="text-xs text-gray-400 mt-1">* JPG, PNG, GIF, WEBP 형식만 지원됩니다. (최대 10MB) 이미지를 변경하지 않으려면 선택하지 마세요.</p>
                         </div>
@@ -147,48 +147,25 @@
         </div>
     </div>
     <%@ include file="../../jspf/footer.jspf" %>
-
+    <script src="${pageContext.request.contextPath}/js/imagePreview.js"></script>
     <script>
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const previewContainer = document.getElementById('new-image-preview');
-                    const previewImg = document.getElementById('preview-img');
-                    const currentImage = document.getElementById('current-image');
-                    const noImagePlaceholder = document.getElementById('no-image-placeholder');
-                    
-                    previewImg.src = e.target.result;
-                    previewContainer.classList.remove('hidden');
-                    
-                    // 기존 이미지나 플레이스홀더 숨기기
-                    if (currentImage) {
-                        currentImage.parentElement.style.display = 'none';
-                    }
-                    if (noImagePlaceholder) {
-                        noImagePlaceholder.style.display = 'none';
-                    }
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
+        // edit.jsp 전용 이미지 미리보기 함수
+        function handleImagePreview(input) {
+            previewImage(input, {
+                previewContainerId: 'new-image-preview',
+                previewImgId: 'preview-img',
+                placeholderId: 'no-image-placeholder',
+                currentImageId: 'current-image'
+            });
         }
 
-        function clearImagePreview() {
-            const previewContainer = document.getElementById('new-image-preview');
-            const fileInput = document.getElementById('image');
-            const currentImage = document.getElementById('current-image');
-            const noImagePlaceholder = document.getElementById('no-image-placeholder');
-            
-            previewContainer.classList.add('hidden');
-            fileInput.value = '';
-            
-            // 기존 이미지나 플레이스홀더 다시 표시
-            if (currentImage) {
-                currentImage.parentElement.style.display = 'block';
-            }
-            if (noImagePlaceholder) {
-                noImagePlaceholder.style.display = 'flex';
-            }
+        function handleClearImagePreview() {
+            clearImagePreview({
+                previewContainerId: 'new-image-preview',
+                fileInputId: 'image',
+                placeholderId: 'no-image-placeholder',
+                currentImageId: 'current-image'
+            });
         }
     </script>
 </body>
