@@ -71,3 +71,5 @@
         .ranking-slide.slide-right { transform: translateX(40%) scale(0.85); opacity: 0.6; z-index: 5; }
     </style>
 </head>
+
+<script src="${pageContext.request.contextPath}/js/toggleSearch.js"></script>
