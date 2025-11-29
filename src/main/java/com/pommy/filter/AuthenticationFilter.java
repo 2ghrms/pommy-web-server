@@ -26,6 +26,7 @@ public class AuthenticationFilter implements Filter {
             "/images/", // 이미지 리소스
             "/js/", // JavaScript 파일
             "/css/", // CSS 파일
+            "/file/image",
             "/WEB-INF/jsp/error/" // 에러 페이지
     );
 
