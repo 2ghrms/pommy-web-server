@@ -58,3 +58,4 @@ function copyPromptToClipboard() {
     copyToClipboard('prompt-content', 'copy-prompt-btn');
 }
 
+
