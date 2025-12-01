@@ -1,4 +1,7 @@
 # Pommy
+<div align="center">
+  <img width="60%" height="348" alt="logo_가로" src="https://github.com/user-attachments/assets/d96ab703-d51a-4832-be2f-8362138a6769" />
+</div>
 
 **프롬프트 밈을 발견하고, 공유하는 공간**
 
@@ -261,7 +264,9 @@ Pommy 애플리케이션의 주요 기능별 시퀀스 다이어그램입니다.
 
 ### 시스템 아키텍처
 
-![시스템 아키텍처](system_architecture.png)
+<div align="center">
+  <img src="system_architecture.png" alt="시스템 아키텍처" width="30%" height="2000">
+</div>
 
 Pommy 애플리케이션의 전체 시스템 아키텍처입니다. 클라이언트 레이어부터 데이터 레이어까지의 구조와 각 컴포넌트 간의 관계를 보여줍니다.
 
