@@ -78,3 +78,4 @@ function clearImagePreview(options) {
     }
 }
 
+
