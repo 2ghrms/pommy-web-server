@@ -3,9 +3,19 @@
   <img width="60%" height="348" alt="logo_가로" src="https://github.com/user-attachments/assets/d96ab703-d51a-4832-be2f-8362138a6769" />
 </div>
 
-**프롬프트 밈을 발견하고, 공유하는 공간**
+### 프롬프트 밈을 발견하고, 공유하는 공간
 
 Pommy는 재미있는 AI 프롬프트 밈을 모아보고, 나만의 밈을 업로드할 수 있는 웹 플랫폼입니다. 다양한 AI 도구(GPT, Gemini, Midjourney, SORA)로 생성된 프롬프트 밈을 공유하고 탐색할 수 있습니다.
+
+### 메인화면
+<div align="center">
+  <img width="2880" height="1457" alt="메인화면" src="https://github.com/user-attachments/assets/1455dfff-a0b1-447a-aca5-a19a91338dae" />
+</div>
+
+### 상세보기
+<div align="center">
+  <img width="30%" height="1392" alt="프롬프트_디테일" src="https://github.com/user-attachments/assets/0f539a39-899e-4d56-b9bf-6aad9e1f4e4b" />
+</div>
 
 ## 📋 목차
 
